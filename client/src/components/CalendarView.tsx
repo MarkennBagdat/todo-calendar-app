@@ -1,11 +1,27 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import { fetchCalendar } from '../api/api.ts';
 
-const CalendarView: React.FC<{ calendarData: Record<string, number>; setSelectedDate: (date: string) => void; selectedDate: string }> = ({ calendarData, setSelectedDate, selectedDate }) => {
-  
+const CalendarView: React.FC<{ setSelectedDate: (date: string) => void; selectedDate: string; refreshCalendar: boolean }> = ({ setSelectedDate, selectedDate, refreshCalendar }) => {
+  const [calendarData, setCalendarData] = useState<Record<string, number>>({});
+
+  // Функция для получения количества задач с сервера
+  const fetchCalendarData = async () => {
+    try {
+      const data = await fetchCalendar();
+      setCalendarData(data);
+    } catch (error) {
+      console.error('Ошибка загрузки календаря:', error);
+    }
+  };
+
+  // Обновлять календарь при изменении даты или задач
+  useEffect(() => {
+    fetchCalendarData();
+  }, [selectedDate, refreshCalendar]); // Добавлен refreshCalendar
+
   const handleDateClick = (date: Date) => {
-    // Преобразуем дату в формат YYYY-MM-DD без учета часового пояса
     const formattedDate = date.toLocaleDateString('en-CA');
     setSelectedDate(formattedDate);
   };

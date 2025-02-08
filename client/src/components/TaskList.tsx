@@ -11,7 +11,15 @@ interface TaskListProps {
 const TaskList: React.FC<TaskListProps> = ({ selectedDate, tasks, setTasks, loading }) => {
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
-  // Загружаем задачи из localStorage при загрузке страницы
+ // Изначально я хотела использовать PUT/PATCH-запрос к серверу для обновления статуса задачи,
+// но сервер не поддерживает изменение задачи (нет соответствующего API-эндпоинта).
+// Рассматривала вариант удаления задачи (DELETE) и её повторного добавления (POST) с обновлённым completed,
+// но тогда статус задачи (completed) всегда сбрасывался бы в false, что неудобно.
+// Временно реализовала обновление статуса через локальное состояние и localStorage.
+// Теперь после обновления страницы задачи остаются "Выполнено".
+// Всё работает на клиенте (React), без необходимости изменять сервер.
+// Однако, в будущем для безопасности лучше использовать PUT/PATCH, чтобы изменения сохранялись на бэке.
+
   useEffect(() => {
     const savedTasks = localStorage.getItem("tasks");
     if (savedTasks) {
