@@ -11,44 +11,52 @@ interface TaskListProps {
 const TaskList: React.FC<TaskListProps> = ({ selectedDate, tasks, setTasks, loading }) => {
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
- // Изначально я хотела использовать PUT/PATCH-запрос к серверу для обновления статуса задачи,
-// но сервер не поддерживает изменение задачи (нет соответствующего API-эндпоинта).
-// Рассматривала вариант удаления задачи (DELETE) и её повторного добавления (POST) с обновлённым completed,
-// но тогда статус задачи (completed) всегда сбрасывался бы в false, что неудобно.
-// Временно реализовала обновление статуса через локальное состояние и localStorage.
-// Теперь после обновления страницы задачи остаются "Выполнено".
-// Всё работает на клиенте (React), без необходимости изменять сервер.
-// Однако, в будущем для безопасности лучше использовать PUT/PATCH, чтобы изменения сохранялись на бэке.
-
   useEffect(() => {
-    const savedTasks = localStorage.getItem("tasks");
-    if (savedTasks) {
-      setTasks(JSON.parse(savedTasks));
+    // Загружаем выполненные задачи из localStorage при изменении даты
+    const savedCompletedTasks = localStorage.getItem("completedTasks");
+    if (savedCompletedTasks) {
+      const completedTasks = JSON.parse(savedCompletedTasks);
+      const updatedTasks = tasks.map(task => ({
+        ...task,
+        completed: completedTasks.includes(task.id),
+      }));
+      setTasks(updatedTasks);
     }
-  }, [setTasks]);
+  }, [selectedDate, setTasks, tasks]);
 
   const handleDelete = async (taskId: number) => {
     if (confirmDelete !== taskId) return;
-
     try {
       await deleteTask(taskId);
       const updatedTasks = tasks.filter((task) => task.id !== taskId);
       setTasks(updatedTasks);
-      localStorage.setItem("tasks", JSON.stringify(updatedTasks)); // Сохраняем обновленный список
+
+      // Удаляем выполненную задачу из localStorage
+      const completedTasks = JSON.parse(localStorage.getItem("completedTasks") || "[]");
+      const newCompletedTasks = completedTasks.filter((id: number) => id !== taskId);
+      localStorage.setItem("completedTasks", JSON.stringify(newCompletedTasks));
+
       setConfirmDelete(null);
     } catch (error) {
       console.error("Ошибка удаления задачи:", error);
     }
   };
 
-  const handleComplete = (id: number, title: string, date: string, completed: boolean) => {
+  const handleComplete = (id: number) => {
     try {
       const updatedTasks = tasks.map((t) =>
-        t.id === id ? { ...t, completed } : t
+        t.id === id ? { ...t, completed: !t.completed } : t
       );
-
       setTasks(updatedTasks);
-      localStorage.setItem("tasks", JSON.stringify(updatedTasks)); // Сохраняем в localStorage
+
+      // Сохраняем выполненные задачи в localStorage
+      const completedTasks = JSON.parse(localStorage.getItem("completedTasks") || "[]");
+      if (updatedTasks.find(task => task.id === id)?.completed) {
+        localStorage.setItem("completedTasks", JSON.stringify([...completedTasks, id]));
+      } else {
+        const newCompletedTasks = completedTasks.filter((taskId: number) => taskId !== id);
+        localStorage.setItem("completedTasks", JSON.stringify(newCompletedTasks));
+      }
     } catch (error) {
       console.error("Ошибка обновления статуса:", error);
     }
@@ -73,25 +81,18 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDate, tasks, setTasks, load
             <li className="empty-message">Нет задач</li>
           ) : (
             tasks.map((task) => (
-              <li
-                key={task.id}
-                className={`task-item ${task.completed ? "completed" : "active"}`}
-              >
+              <li key={task.id} className={`task-item ${task.completed ? "completed" : "active"}`}>
                 <div className="task-content">
                   <input
                     type="checkbox"
                     checked={task.completed}
-                    onChange={() =>
-                      handleComplete(task.id, task.title, task.date, !task.completed)
-                    }
+                    onChange={() => handleComplete(task.id)}
                     className="task-checkbox"
                   />
                   <span className={`task-title ${task.completed ? "completed-text" : ""}`}>
                     {task.title}
                   </span>
-                  <span
-                    className={`task-status ${task.completed ? "status-done" : "status-active"}`}
-                  >
+                  <span className={`task-status ${task.completed ? "status-done" : "status-active"}`}>
                     {task.completed ? "Выполнено" : "Активно"}
                   </span>
                 </div>
