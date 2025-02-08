@@ -1,7 +1,7 @@
-const API_BASE_URL: string = 'http://localhost:4000';
+const API_BASE_URL = 'http://localhost:4000';
 
 export interface Task {
-  id: string;
+  id: number;
   title: string;
   date: string;
   completed: boolean;
@@ -22,44 +22,63 @@ export const fetchTasks = async (date: string): Promise<Task[]> => {
 };
 
 export const addTask = async (task: NewTask): Promise<Task> => {
-  console.log("Отправляем задачу:", task); // Логируем перед отправкой
-
   const response = await fetch(`${API_BASE_URL}/tasks`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(task),
+    body: JSON.stringify({
+      title: task.title.trim(),
+      date: task.date,
+      completed: false // добавляем значение по умолчанию
+    }),
   });
 
   if (!response.ok) {
-    const errorText = await response.text(); // Получаем текст ошибки
-    console.error(`Ошибка сервера: ${errorText}`);
-    throw new Error(`Failed to create task: ${response.statusText}`);
+    throw new Error('Failed to create task');
   }
 
   return response.json();
 };
 
-export const deleteTask = async (id: string): Promise<void> => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
-      method: 'DELETE',
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to delete task: ${response.statusText}`);
-    }
-    console.log(`Task ${id} deleted successfully`);
-  } catch (error) {
-    console.error('Ошибка при удалении задачи:', error);
+export const deleteTask = async (taskId: number): Promise<void> => {
+  const response = await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+    method: 'DELETE',
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to delete task');
   }
 };
-
 
 export const fetchCalendar = async (): Promise<Record<string, number>> => {
   const response = await fetch(`${API_BASE_URL}/calendar`);
   if (!response.ok) {
     throw new Error('Failed to fetch calendar data');
   }
+  return response.json();
+};
+
+export const updateTaskStatus = async (
+  id: number,
+  title: string,
+  date: string,
+  completed: boolean
+): Promise<Task> => {
+  console.log("Отправка запроса на сервер:", { id, title, date, completed });
+
+  const response = await fetch(`${API_BASE_URL}/tasks/${id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id, title, date, completed }),
+  });
+  
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`Ошибка обновления задачи: ${response.status}, ${errorText}`);
+    throw new Error(`Failed to update task status`);
+  }
+
   return response.json();
 };

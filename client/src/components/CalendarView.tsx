@@ -6,7 +6,7 @@ const CalendarView: React.FC<{ calendarData: Record<string, number>; setSelected
   
   const handleDateClick = (date: Date) => {
     // Преобразуем дату в формат YYYY-MM-DD без учета часового пояса
-    const formattedDate = date.toLocaleDateString('en-CA'); // en-CA = YYYY-MM-DD формат
+    const formattedDate = date.toLocaleDateString('en-CA');
     setSelectedDate(formattedDate);
   };
 
@@ -15,7 +15,7 @@ const CalendarView: React.FC<{ calendarData: Record<string, number>; setSelected
       <Calendar
         onClickDay={handleDateClick}
         tileContent={({ date }) => {
-          const dateString = date.toLocaleDateString('en-CA'); // en-CA = YYYY-MM-DD формат
+          const dateString = date.toLocaleDateString('en-CA');
           return calendarData[dateString] ? (
             <div className="task-dot">{calendarData[dateString]} tasks</div>
           ) : null;
