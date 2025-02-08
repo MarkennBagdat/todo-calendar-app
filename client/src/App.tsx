@@ -39,9 +39,11 @@ const App: React.FC = () => {
         selectedDate={selectedDate} // Теперь передаем правильную дату
       />
       <AddTaskForm 
-        selectedDate={selectedDate} 
-        onTaskAdded={refreshTasks} 
-      />
+  selectedDate={selectedDate} 
+  setSelectedDate={setSelectedDate} // Передаем функцию для синхронизации с календарем
+  onTaskAdded={refreshTasks} 
+/>
+
       <TaskList 
         tasks={tasks} 
         setTasks={setTasks} 
