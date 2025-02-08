@@ -14,36 +14,34 @@ export interface NewTask {
   date: string;
 }
 
-// Получение задач на определенную дату
+// **Получение задач на указанную дату**
 export const fetchTasks = async (date: string): Promise<Task[]> => {
   const response = await axios.get(`${API_BASE_URL}/tasks`, { params: { date } });
   return response.data;
 };
 
-// Добавление новой задачи
+// **Добавление новой задачи**
 export const addTask = async (task: NewTask): Promise<Task> => {
   const response = await axios.post(`${API_BASE_URL}/tasks`, {
     title: task.title.trim(),
     date: task.date,
-    completed: false, // добавляем значение по умолчанию
+    completed: false // добавляем значение по умолчанию
   });
-
   return response.data;
 };
 
-// Удаление задачи + обновление календаря
-export const deleteTask = async (taskId: number, refreshCalendar: () => void): Promise<void> => {
+// **Удаление задачи**
+export const deleteTask = async (taskId: number): Promise<void> => {
   await axios.delete(`${API_BASE_URL}/tasks/${taskId}`);
-  refreshCalendar(); // Обновление календаря после удаления задачи
 };
 
-// Получение данных календаря
+// **Получение данных календаря**
 export const fetchCalendar = async (): Promise<Record<string, number>> => {
   const response = await axios.get(`${API_BASE_URL}/calendar`);
   return response.data;
 };
 
-// Обновление статуса задачи (выполнено/не выполнено)
+// **Обновление статуса задачи (теперь через PATCH)**
 export const updateTaskStatus = async (id: number, completed: boolean): Promise<Task> => {
   console.log("Отправка запроса на сервер:", { id, completed });
 

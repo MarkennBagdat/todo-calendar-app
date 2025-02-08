@@ -11,6 +11,7 @@ interface TaskListProps {
 const TaskList: React.FC<TaskListProps> = ({ selectedDate, tasks, setTasks, loading }) => {
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
+
 // Изначально я хотела использовать PUT/PATCH-запрос к серверу для обновления статуса задачи,
 // но сервер не поддерживает изменение задачи (нет соответствующего API-эндпоинта).
 // Рассматривала вариант удаления задачи (DELETE) и её повторного добавления (POST) с обновлённым completed,
@@ -19,10 +20,8 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDate, tasks, setTasks, load
 // Теперь после обновления страницы задачи остаются "Выполнено".
 // Всё работает на клиенте (React), без необходимости изменять сервер.
 // Однако, в будущем для безопасности лучше использовать PUT/PATCH, чтобы изменения сохранялись на бэке.
-
-
-  useEffect(() => {
-    // Загружаем выполненные задачи из localStorage при изменении даты
+  
+useEffect(() => {
     const savedCompletedTasks = localStorage.getItem("completedTasks");
     if (savedCompletedTasks) {
       const completedTasks = JSON.parse(savedCompletedTasks);
@@ -35,13 +34,12 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDate, tasks, setTasks, load
   }, [selectedDate, setTasks, tasks]);
 
   const handleDelete = async (taskId: number) => {
-    if (confirmDelete !== taskId) return;
     try {
       await deleteTask(taskId);
       const updatedTasks = tasks.filter((task) => task.id !== taskId);
       setTasks(updatedTasks);
 
-      // Удаляем выполненную задачу из localStorage
+      // Удаляем из localStorage
       const completedTasks = JSON.parse(localStorage.getItem("completedTasks") || "[]");
       const newCompletedTasks = completedTasks.filter((id: number) => id !== taskId);
       localStorage.setItem("completedTasks", JSON.stringify(newCompletedTasks));
@@ -107,25 +105,32 @@ const TaskList: React.FC<TaskListProps> = ({ selectedDate, tasks, setTasks, load
                   </span>
                 </div>
                 <div className="task-actions">
-                  {confirmDelete === task.id ? (
-                    <>
-                      <button onClick={() => handleDelete(task.id)} className="confirm-delete">
-                        Подтвердить
-                      </button>
-                      <button onClick={() => setConfirmDelete(null)} className="cancel-delete">
-                        Отмена
-                      </button>
-                    </>
-                  ) : (
-                    <button onClick={() => setConfirmDelete(task.id)} className="delete-button">
-                      Удалить
-                    </button>
-                  )}
+                  <button onClick={() => setConfirmDelete(task.id)} className="delete-button">
+                    Удалить
+                  </button>
                 </div>
               </li>
             ))
           )}
         </ul>
+      )}
+
+      {/* Модальное окно подтверждения удаления */}
+      {confirmDelete !== null && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h3>Вы уверены?</h3>
+            <p>Эту задачу нельзя будет восстановить.</p>
+            <div className="modal-actions">
+              <button onClick={() => handleDelete(confirmDelete)} className="confirm-delete">
+                Удалить
+              </button>
+              <button onClick={() => setConfirmDelete(null)} className="cancel-delete">
+                Отмена
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
