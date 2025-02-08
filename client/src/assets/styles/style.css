@@ -191,6 +191,11 @@ button:hover {
   margin-top: 2px;
 }
 
+.selected-tile .task-dot {
+  color: white !important;
+}
+
+
 .calendar-wrapper {
   background: white;
   border-radius: 8px;
